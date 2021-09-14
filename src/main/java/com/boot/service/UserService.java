@@ -1,7 +1,7 @@
 package com.boot.service;
 
 import com.boot.entity.User;
-import com.boot.exeption.MyCustomUniqueExceptionThatCanBeCatchViaExceptionHandlerAndProperMessageToCustomerGenerated;
+import com.boot.exeption.EmailOrUsernameAlreadyExistsException;
 import com.boot.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,7 +17,7 @@ public class UserService {
         try {
             return userRepository.save(user);
         } catch (DataIntegrityViolationException ex) {
-            throw new MyCustomUniqueExceptionThatCanBeCatchViaExceptionHandlerAndProperMessageToCustomerGenerated(
+            throw new EmailOrUsernameAlreadyExistsException(
                     "User with this name or email already exists");
         }
     }
