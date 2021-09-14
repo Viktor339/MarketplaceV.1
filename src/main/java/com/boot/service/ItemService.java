@@ -4,11 +4,11 @@ import com.boot.entity.Basket;
 import com.boot.entity.Item;
 import com.boot.entity.User;
 import com.boot.pojo.AddRequest;
+import com.boot.pojo.ItemInfoMessage;
 import com.boot.pojo.MessageResponse;
 import com.boot.pojo.SearchRequest;
 import com.boot.repository.BasketRepository;
 import com.boot.repository.ItemRepository;
-import com.boot.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,20 +28,15 @@ public class ItemService {
     private ItemRepository itemRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private MailSender mailSender;
 
 
     public ResponseEntity<?> searchItem(SearchRequest searchRequest) {
-        /**
-         * /нет поиска по англ. алфавиту
-         */
+
         String[] tagsRequest = searchRequest.getTags();
         String descriptionRequest = searchRequest.getDescription();
 
-        //chech that request have tags or description
+        //check that request have tags or description
         if (tagsRequest == null & descriptionRequest == null) {
             return ResponseEntity
                     .badRequest()
@@ -53,7 +48,7 @@ public class ItemService {
             //search by tags
             if (tagsRequest != null) {
                 for (String tags : tagsRequest) {
-                    itemList.add(itemRepository.findByTagsContaining(tags));
+                    itemList.add(itemRepository.findByTagsContainingIgnoreCase(tags));
                 }
             }
 
@@ -64,7 +59,7 @@ public class ItemService {
                         .distinct().filter(word -> word.length() > 1)
                         .collect(Collectors.toList());
                 for (String word : eachWordInRequest) {
-                    itemList.add(itemRepository.findByDescriptionContaining(word));
+                    itemList.add(itemRepository.findByDescriptionContainingIgnoreCase(word));
                 }
             }
 
@@ -83,8 +78,8 @@ public class ItemService {
         Item addedItem = itemRepository.findAllByName(addRequest.getItemName());
 
         //check that the item exists and is not in the user's cart
-        if (itemRepository.existsByName(itemName) & !basketRepository.existsByItemIdAndUserId(addedItem.getId(),user.getId())) {
-            basketRepository.insertItem(addedItem.getId(),user.getId());
+        if (itemRepository.existsByName(itemName) & !basketRepository.existsByItemIdAndUserId(addedItem.getId(), user.getId())) {
+            basketRepository.insertItem(addedItem.getId(), user.getId());
         } else if (!itemRepository.existsByName(itemName)) {
             return ResponseEntity.badRequest().body(new MessageResponse("Entered item doesn't found"));
         } else {
@@ -104,19 +99,10 @@ public class ItemService {
             return ResponseEntity.badRequest().body(new MessageResponse("The basket is empty!"));
         }
 
-        //get full information about item
-        List<Item> namesOfUsersItems = userItemList.stream().map(item -> item.getItem()).collect(Collectors.toList());
-        List<String> fullInformationAboutItem = new ArrayList<>();
-        for (Item usersItem : namesOfUsersItems) {
-            fullInformationAboutItem.add(itemRepository.findAllByName(usersItem.getName()).getName());
-            fullInformationAboutItem.add(itemRepository.findAllByName(usersItem.getName()).getDescription());
-        }
-
-        // send inf about item on the users email
-        String message = "the products you bought: " + fullInformationAboutItem;
-        // fullInformationAboutItem.stream().forEach(item -> System.out.println(item));
-        mailSender.send(userEmail, "your list of purchased items ", message);
-        //clean the basket
+        //get a list of all the user's items and send information about each item to the user's email
+        List<Item> userItems = userItemList.stream().map(item -> item.getItem()).collect(Collectors.toList());
+        ItemInfoMessage message = new ItemInfoMessage(userItems);
+        mailSender.send(userEmail, "your list of purchased items ", message.toString());
         basketRepository.deleteAllByUserId(user.getId());
         return ResponseEntity.ok(new MessageResponse("Email with information about purchased sended on your email"));
     }

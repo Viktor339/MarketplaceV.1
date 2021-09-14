@@ -29,12 +29,13 @@ import static org.mockito.Mockito.*;
 
 
 @SpringBootTest
-public class ItemServiceTest{
+public class ItemServiceTest {
 
     private static User user = new User();
     private static AddRequest addRequest = new AddRequest();
     private static List<Basket> userItemList = new ArrayList<>();
     private static Item item = new Item();
+    private static String SEARCH_ITEM_MESSAGE = "Error: Enter your search criteria";
 
     @MockBean
     private BasketRepository basketRepository;
@@ -67,14 +68,14 @@ public class ItemServiceTest{
     public void testSearchItem_WhenDescriptionAndTagsIsNull_MustReturnHttpStatusBadRequest() {
         SearchRequest searchRequest = new SearchRequest(null, null);
 
-        when(this.itemRepository.findByDescriptionContaining((String) any())).thenReturn(new ArrayList<Item>());
-        when(this.itemRepository.findByTagsContaining((String) any())).thenReturn(new ArrayList<Item>());
+        when(this.itemRepository.findByDescriptionContainingIgnoreCase((String) any())).thenReturn(new ArrayList<Item>());
+        when(this.itemRepository.findByTagsContainingIgnoreCase((String) any())).thenReturn(new ArrayList<Item>());
 
         ResponseEntity<?> actualSearchItemResult = this.itemService.searchItem(searchRequest);
         assertTrue(actualSearchItemResult.hasBody());
         assertTrue(actualSearchItemResult.getHeaders().isEmpty());
         assertEquals(HttpStatus.BAD_REQUEST, actualSearchItemResult.getStatusCode());
-        assertEquals("Error: Enter your search criteria",
+        assertEquals(SEARCH_ITEM_MESSAGE,
                 ((MessageResponse) actualSearchItemResult.getBody()).getMessage());
     }
 
@@ -82,8 +83,8 @@ public class ItemServiceTest{
     public void testSearchItem_WhenDescriptionIsNull_MustReturnHttpStatusBadRequest() {
         SearchRequest searchRequest = new SearchRequest(new String[]{"Tags"}, null);
 
-        when(this.itemRepository.findByDescriptionContaining((String) any())).thenReturn(new ArrayList<Item>());
-        when(this.itemRepository.findByTagsContaining((String) any())).thenReturn(new ArrayList<Item>());
+        when(this.itemRepository.findByDescriptionContainingIgnoreCase((String) any())).thenReturn(new ArrayList<Item>());
+        when(this.itemRepository.findByTagsContainingIgnoreCase((String) any())).thenReturn(new ArrayList<Item>());
 
         ResponseEntity<?> actualSearchItemResult = this.itemService.searchItem(searchRequest);
         assertTrue(((Collection<Object>) actualSearchItemResult.getBody()).isEmpty());
@@ -91,15 +92,15 @@ public class ItemServiceTest{
         assertTrue(actualSearchItemResult.hasBody());
         assertEquals(HttpStatus.OK, actualSearchItemResult.getStatusCode());
         assertTrue(actualSearchItemResult.getHeaders().isEmpty());
-        verify(this.itemRepository).findByTagsContaining((String) any());
+        verify(this.itemRepository).findByTagsContainingIgnoreCase((String) any());
     }
 
     @Test
     public void testSearchItem_WhenTagsIsNull_MustReturnHttpStatusBadRequest() {
         SearchRequest searchRequest = new SearchRequest(null, "Description");
 
-        when(this.itemRepository.findByDescriptionContaining((String) any())).thenReturn(new ArrayList<Item>());
-        when(this.itemRepository.findByTagsContaining((String) any())).thenReturn(new ArrayList<Item>());
+        when(this.itemRepository.findByDescriptionContainingIgnoreCase((String) any())).thenReturn(new ArrayList<Item>());
+        when(this.itemRepository.findByTagsContainingIgnoreCase((String) any())).thenReturn(new ArrayList<Item>());
 
         ResponseEntity<?> actualSearchItemResult = this.itemService.searchItem(searchRequest);
         assertTrue(((Collection<Object>) actualSearchItemResult.getBody()).isEmpty());
@@ -107,7 +108,7 @@ public class ItemServiceTest{
         assertTrue(actualSearchItemResult.hasBody());
         assertEquals(HttpStatus.OK, actualSearchItemResult.getStatusCode());
         assertTrue(actualSearchItemResult.getHeaders().isEmpty());
-        verify(this.itemRepository, atLeast(1)).findByDescriptionContaining((String) any());
+        verify(this.itemRepository, atLeast(1)).findByDescriptionContainingIgnoreCase((String) any());
     }
 
 
@@ -122,7 +123,7 @@ public class ItemServiceTest{
         when(itemRepository.existsByName((String) any())).thenReturn(true);
         when(basketRepository.existsByItem((String) any())).thenReturn(false);
 
-        ResponseEntity<?> actualAddItemResult = this.itemService.addItem(addRequest,user);
+        ResponseEntity<?> actualAddItemResult = this.itemService.addItem(addRequest, user);
 
         assertTrue(actualAddItemResult.hasBody());
         assertEquals(HttpStatus.OK, actualAddItemResult.getStatusCode());
@@ -143,7 +144,7 @@ public class ItemServiceTest{
         when(itemRepository.existsByName((String) any())).thenReturn(false);
         when(basketRepository.existsByItem((String) any())).thenReturn(true);
 
-        ResponseEntity<?> actualAddItemResult = this.itemService.addItem(addRequest,user);
+        ResponseEntity<?> actualAddItemResult = this.itemService.addItem(addRequest, user);
 
         assertTrue(actualAddItemResult.hasBody());
         assertEquals(HttpStatus.BAD_REQUEST, actualAddItemResult.getStatusCode());
@@ -159,9 +160,9 @@ public class ItemServiceTest{
         when(this.userRepository.findAllByUsername((String) any())).thenReturn(user);
         when(itemRepository.existsByName((String) any())).thenReturn(true);
         when(itemRepository.findAllByName((String) any())).thenReturn(item);
-        when(basketRepository.existsByItemIdAndUserId((Long) any(),(Long) any())).thenReturn(true);
+        when(basketRepository.existsByItemIdAndUserId((Long) any(), (Long) any())).thenReturn(true);
 
-        ResponseEntity<?> actualAddItemResult = this.itemService.addItem(addRequest,user);
+        ResponseEntity<?> actualAddItemResult = this.itemService.addItem(addRequest, user);
 
         assertTrue(actualAddItemResult.hasBody());
         assertEquals(HttpStatus.BAD_REQUEST, actualAddItemResult.getStatusCode());
