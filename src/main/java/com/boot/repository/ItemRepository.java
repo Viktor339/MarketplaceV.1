@@ -14,9 +14,9 @@ import java.util.List;
 public interface ItemRepository extends JpaRepository<Item, Long> {
     Boolean existsByTags(String tags);
 
-    List<Item> findByTagsContaining(String director);
+    List<Item> findByTagsContainingIgnoreCase(String tags);
 
-    List<Item> findByDescriptionContaining(String description);
+    List<Item> findByDescriptionContainingIgnoreCase(String description);
 
     Boolean existsByName(String name);
 
