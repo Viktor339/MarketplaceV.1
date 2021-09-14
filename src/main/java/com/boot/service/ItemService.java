@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import static java.util.Comparator.comparing;
 
 @Service
 public class ItemService {
@@ -43,7 +44,7 @@ public class ItemService {
                     .body(new MessageResponse("Error: Enter your search criteria"));
         } else {
             List<List<Item>> itemList = new ArrayList<>();
-            Set<Item> uniqueSearchResults = new TreeSet<>(Comparator.comparing(item -> item.getName()));
+            Set<Item> uniqueSearchResults = new TreeSet<>(comparing(Item::getName));
 
             //search by tags
             if (tagsRequest != null) {
@@ -100,7 +101,10 @@ public class ItemService {
         }
 
         //get a list of all the user's items and send information about each item to the user's email
-        List<Item> userItems = userItemList.stream().map(item -> item.getItem()).collect(Collectors.toList());
+        List<Item> userItems = userItemList
+                .stream()
+                .map(Basket::getItem)
+                .collect(Collectors.toList());
         ItemsMessage message = new ItemsMessage(userItems);
         mailSender.send(userEmail, "your list of purchased items ", message.toString());
         basketRepository.deleteAllByUserId(user.getId());
