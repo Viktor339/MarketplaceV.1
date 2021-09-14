@@ -4,7 +4,7 @@ import com.boot.entity.Basket;
 import com.boot.entity.Item;
 import com.boot.entity.User;
 import com.boot.pojo.AddRequest;
-import com.boot.pojo.ItemInfoMessage;
+import com.boot.pojo.ItemsMessage;
 import com.boot.pojo.MessageResponse;
 import com.boot.pojo.SearchRequest;
 import com.boot.repository.BasketRepository;
@@ -101,7 +101,7 @@ public class ItemService {
 
         //get a list of all the user's items and send information about each item to the user's email
         List<Item> userItems = userItemList.stream().map(item -> item.getItem()).collect(Collectors.toList());
-        ItemInfoMessage message = new ItemInfoMessage(userItems);
+        ItemsMessage message = new ItemsMessage(userItems);
         mailSender.send(userEmail, "your list of purchased items ", message.toString());
         basketRepository.deleteAllByUserId(user.getId());
         return ResponseEntity.ok(new MessageResponse("Email with information about purchased sended on your email"));

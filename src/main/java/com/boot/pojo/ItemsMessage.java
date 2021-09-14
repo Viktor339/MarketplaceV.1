@@ -3,11 +3,11 @@ package com.boot.pojo;
 import com.boot.entity.Item;
 import java.util.List;
 
-public class ItemInfoMessage {
+public class ItemsMessage {
 
     private String resultMessage = "the products you bought: ";
 
-    public ItemInfoMessage(List<Item> itemList) {
+    public ItemsMessage(List<Item> itemList) {
         itemList.forEach(item -> resultMessage += "\n" + item.getName() + item.getDescription());
     }
 
